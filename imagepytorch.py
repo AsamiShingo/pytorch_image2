@@ -21,11 +21,10 @@ class ImagePytorch:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print("device={}".format(self.device))
         
-    
-    def train(self, dataloader:ImageDataLoader, epoch_num):        
         self.gen.to(self.device)
         self.dis.to(self.device)
-        
+    
+    def train(self, dataloader:ImageDataLoader, epoch_num):
         self.gen.train()
         self.dis.train()
         
@@ -89,14 +88,14 @@ class ImagePytorch:
         fake_inputs = torch.randn(generate_num, self.z_dim)
         fake_inputs = fake_inputs.view(generate_num, self.z_dim, 1, 1)
         fake_inputs = fake_inputs.to(self.device)
-
+                        
         self.gen.eval()
         self.dis.eval()
         fake_images = self.gen(fake_inputs)
         dis_outs = self.dis(fake_images)
         for fake_img, dis_out in zip(fake_images, dis_outs):
             print("dis_out={:.4f}".format(dis_out[0][0][0]))
-            img = fake_img[0].detach().numpy()
+            img = fake_img[0].cpu().detach().numpy()
             plt.imshow(img, 'gray')
             plt.show()
         
@@ -105,7 +104,7 @@ class ImagePytorch:
         dis_outs = self.dis(real_images)
         for fake_img, dis_out in zip(real_images, dis_outs):
             print("dis_out={:.4f}".format(dis_out[0][0][0]))
-            img = fake_img[0].detach().numpy()
+            img = fake_img[0].cpu().detach().numpy()
             plt.imshow(img, 'gray')
             plt.show()
             
@@ -137,11 +136,11 @@ if __name__=="__main__":
     if os.path.isfile(dis_weight_path):
         image_dis.load_weight(dis_weight_path)
         
-    train.train(dataloader, 300)
+    train.train(dataloader, 100)
         
     image_gen.save_weight(gen_weight_path)
     image_dis.save_weight(dis_weight_path)
     
-    train.predict(2, dataloader)
+    train.predict(50, dataloader)
     
     
