@@ -5,6 +5,30 @@ import torch
 import matplotlib.pyplot as plt
 import math
 
+class ImageSelfAttention(nn.Module):
+    def __init__(self, in_dim, conv_dim):
+        super().__init__()
+        self.query_conv_layer = nn.Conv2d(in_dim, conv_dim, kernel_size=1)
+        self.key_conv_layer = nn.Conv2d(in_dim, conv_dim, kernel_size=1)
+        self.value_conv_layer = nn.Conv2d(in_dim, in_dim, kernel_size=1)
+        self.soft_max = nn.Softmax(dim=-2)
+        self.gamma = nn.Parameter(torch.zeros(1))
+        
+    def forward(self, input):
+        data_size = input.shape[2]*input.shape[3]
+        query_data = self.query_conv_layer(input).view(input.shape[0], -1, data_size)
+        key_data = self.key_conv_layer(input).view(input.shape[0], -1, data_size)
+        value_data = self.value_conv_layer(input).view(input.shape[0], -1, data_size)
+        
+        attention_matrix = torch.bmm(query_data.permute(0, 2, 1), key_data)
+        attention_score_t = self.soft_max(attention_matrix)
+        attention_data = torch.bmm(value_data, attention_score_t)
+        attention_data = attention_data.view(input.shape[0], input.shape[1], input.shape[2], input.shape[3])
+        
+        attention_result = input + self.gamma * attention_data
+        
+        return attention_result
+        
 class ImageGenerator(nn.Module):
     def __init__(self, chanel, width, height, z_dim=20):
         super().__init__()
@@ -19,7 +43,8 @@ class ImageGenerator(nn.Module):
         
         def create_transpose_layer(in_c, out_c, kernel, stride, padding):
             layers = []
-            layers.append(nn.ConvTranspose2d(in_c, out_c, kernel_size=kernel, stride=stride, padding=padding))
+            layers.append(nn.utils.spectral_norm(
+                nn.ConvTranspose2d(in_c, out_c, kernel_size=kernel, stride=stride, padding=padding)))
             layers.append(nn.BatchNorm2d(out_c))
             layers.append(nn.ReLU(inplace=True))
                 
@@ -29,8 +54,10 @@ class ImageGenerator(nn.Module):
         self.layers += layers_tmp
         layers_tmp, c = create_transpose_layer(c, self.chanel*self.image_size*2, 4, 2, 1)
         self.layers += layers_tmp
+        self.layers.append(ImageSelfAttention(c, c//8))
         layers_tmp, c = create_transpose_layer(c, self.chanel*self.image_size*1, 4, 2, 1)
         self.layers += layers_tmp
+        self.layers.append(ImageSelfAttention(c, c//8))
         
         self.layers.append(nn.ConvTranspose2d(c, self.chanel, kernel_size=4, stride=2, padding=1))
         self.layers.append(nn.Tanh())
@@ -78,7 +105,8 @@ class ImageDiscriminator(nn.Module):
         
         def create_conv_layer(in_c, out_c, kernel, stride, padding):
             layers = []            
-            layers.append(nn.Conv2d(in_c, out_c, kernel_size=kernel, stride=stride, padding=padding))
+            layers.append(nn.utils.spectral_norm(
+                nn.Conv2d(in_c, out_c, kernel_size=kernel, stride=stride, padding=padding)))
             layers.append(nn.LeakyReLU(0.1, inplace=True))
                 
             return layers, out_c
@@ -87,11 +115,13 @@ class ImageDiscriminator(nn.Module):
         self.layers += layers_tmp
         layers_tmp, c = create_conv_layer(c, self.image_size*2, 4, 2, 1)
         self.layers += layers_tmp
+        self.layers.append(ImageSelfAttention(c, c//8))
         layers_tmp, c = create_conv_layer(c, self.image_size*4, 4, 2, 1)
         self.layers += layers_tmp
+        self.layers.append(ImageSelfAttention(c, c//8))
                 
         self.layers.append(nn.Conv2d(c, 1, kernel_size=4, stride=1, padding=0))
-        self.layers.append(nn.Sigmoid())
+        # self.layers.append(nn.Sigmoid())
         self.layers = nn.ModuleList(self.layers)
         
     def forward(self, input):
