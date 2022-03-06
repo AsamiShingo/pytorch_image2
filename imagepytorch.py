@@ -144,8 +144,9 @@ if __name__=="__main__":
     
     if os.path.isfile(dis_weight_path):
         image_dis.load_weight(dis_weight_path)
-        
-    train.train(dataloader, epoch_num)
+    
+    if epoch_num > 0:    
+        train.train(dataloader, epoch_num)
         
     image_gen.save_weight(gen_weight_path)
     image_dis.save_weight(dis_weight_path)
