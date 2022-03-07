@@ -15,8 +15,8 @@ class ImagePytorch:
         self.dis = dis
         self.z_dim = z_dim
         
-        self.g_optimizer = optim.Adam(self.gen.parameters(), 0.0001, [0.0, 0.9])
-        self.d_optimizer = optim.Adam(self.dis.parameters(), 0.0004, [0.0, 0.9])
+        self.g_optimizer = optim.Adam(self.gen.parameters(), 0.00010, [0.0, 0.9])
+        self.d_optimizer = optim.Adam(self.dis.parameters(), 0.00005, [0.0, 0.9])
         # self.criteron = nn.BCEWithLogitsLoss(reduction="mean")
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print("device={}".format(self.device))
