@@ -95,8 +95,10 @@ class ImagePytorch:
         dis_outs = self.dis(fake_images)
         for fake_img, dis_out in zip(fake_images, dis_outs):
             print("dis_out={:.4f}".format(dis_out[0][0][0]))
-            img = fake_img[0].cpu().detach().numpy()
-            plt.imshow(img, 'gray')
+            fake_img = torch.nn.ReLU()(fake_img.permute(1, 2, 0))
+            img = fake_img.cpu().detach().numpy()
+            img = (img * 255).astype(np.int)
+            plt.imshow(img)
             plt.show()
         
         real_images, _ = next(iter(dataloader()))
@@ -107,13 +109,14 @@ class ImagePytorch:
                 break
             
             print("dis_out={:.4f}".format(dis_out[0][0][0]))
-            img = real_img[0].cpu().detach().numpy()
-            plt.imshow(img, 'gray')
+            real_img = real_img.permute(1, 2, 0)
+            img = real_img.cpu().detach().numpy()
+            plt.imshow(img)
             plt.show()
             
 if __name__=="__main__":
-    image_gen = ImageGenerator(1, 32, 32, 20)
-    image_dis = ImageDiscriminator(1, 32, 32)
+    image_gen = ImageGenerator(3, 32, 32, 20)
+    image_dis = ImageDiscriminator(3, 32, 32)
     train = ImagePytorch(image_gen, image_dis, 20)
     
     datapath=""
@@ -125,8 +128,8 @@ if __name__=="__main__":
     else:
         # datapath=r"D:\git\pytorch_image2\data\cifar10_small\data"
         # datapath=r"D:\git\pytorch_image2\data\cifar10\cifar10_data\train"
-        datapath=r"D:\git\pytorch_image2\data\number\data"
-        # datapath=r"D:\git\pytorch_image2\data\cifar10_airplane"
+        # datapath=r"D:\git\pytorch_image2\data\number\data"
+        datapath=r"D:\git\pytorch_image2\data\cifar10_airplane"
         gen_weight_path = r"D:\git\pytorch_image2\savedir\gen_weight.dat"
         dis_weight_path = r"D:\git\pytorch_image2\savedir\dis_weight.dat"
         

@@ -11,8 +11,8 @@ class ImageDataset(Dataset):
     NUMPY_KEY="image"
     
     TRANSFORM_SCALE=(0.5, 1.0)
-    TRANSFORM_MEAN=(0.5,)
-    TRANSFORM_STD=(0.5,)
+    # TRANSFORM_MEAN=(0.485, 0.456, 0.406)
+    # TRANSFORM_STD=(0.229, 0.224, 0.225)
     
     def __init__(self, is_train, transform_size):
         self.is_train = is_train
@@ -35,20 +35,20 @@ class ImageDataset(Dataset):
         if(is_train == True):
             transform = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Grayscale(),
+                # transforms.Grayscale(),
 				# transforms.RandomResizedCrop(transform_size, scale=self.TRANSFORM_SCALE),
 				# transforms.RandomHorizontalFlip(),
 				transforms.ToTensor(),
-				transforms.Normalize(self.TRANSFORM_MEAN, self.TRANSFORM_STD)    
+				# transforms.Normalize(self.TRANSFORM_MEAN, self.TRANSFORM_STD)    
 			])
         else:
             transform = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Grayscale(),
+                # transforms.Grayscale(),
 				# transforms.Resize(transform_size),
 				# transforms.CenterCrop(transform_size),
 				transforms.ToTensor(),
-				transforms.Normalize(self.TRANSFORM_MEAN, self.TRANSFORM_STD)    
+				# transforms.Normalize(self.TRANSFORM_MEAN, self.TRANSFORM_STD)    
 			])
             
         return transform
