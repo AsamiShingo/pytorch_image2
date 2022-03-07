@@ -88,7 +88,11 @@ class ImageGenerator(nn.Module):
         torch.save(super().state_dict(), path)
         
     def load_weight(self, path):
-        weights = torch.load(path)
+        try:
+            weights = torch.load(path)
+        except:
+            weights = torch.load(path, map_location={'cuda:0': 'cpu'})
+            
         super().load_state_dict(weights)
         
         
@@ -148,7 +152,11 @@ class ImageDiscriminator(nn.Module):
         torch.save(super().state_dict(), path)
         
     def load_weight(self, path):
-        weights = torch.load(path)
+        try:
+            weights = torch.load(path)
+        except:
+            weights = torch.load(path, map_location={'cuda:0': 'cpu'})
+            
         super().load_state_dict(weights)
         
         
